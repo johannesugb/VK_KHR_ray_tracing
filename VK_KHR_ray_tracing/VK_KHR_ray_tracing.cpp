@@ -624,7 +624,7 @@ int main() {
         accelerationInfo.pNext = nullptr;
         accelerationInfo.compactedSize = 0;
         accelerationInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-        accelerationInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+        accelerationInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR;
         accelerationInfo.maxGeometryCount = 1;
         accelerationInfo.pGeometryInfos = &accelerationCreateGeometryInfo;
         accelerationInfo.deviceAddress = VK_NULL_HANDLE;
@@ -680,7 +680,7 @@ int main() {
         accelerationBuildGeometryInfo.pNext = nullptr;
         accelerationBuildGeometryInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
         accelerationBuildGeometryInfo.flags =
-            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR;
         accelerationBuildGeometryInfo.update = VK_FALSE;
         accelerationBuildGeometryInfo.srcAccelerationStructure = VK_NULL_HANDLE;
         accelerationBuildGeometryInfo.dstAccelerationStructure = bottomLevelAS;
@@ -716,6 +716,12 @@ int main() {
         commandBufferBeginInfo.pInheritanceInfo = nullptr;
         vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
 
+        vkCmdBuildAccelerationStructureKHR(commandBuffer, 1, &accelerationBuildGeometryInfo,
+                                           accelerationBuildOffsets.data());
+
+        // Update Bottom-Level Acceleration Structure:
+        accelerationBuildGeometryInfo.srcAccelerationStructure = accelerationBuildGeometryInfo.dstAccelerationStructure;
+        accelerationBuildGeometryInfo.update = VK_TRUE;
         vkCmdBuildAccelerationStructureKHR(commandBuffer, 1, &accelerationBuildGeometryInfo,
                                            accelerationBuildOffsets.data());
 
@@ -770,7 +776,7 @@ int main() {
         VkAccelerationStructureCreateInfoKHR accelerationInfo;
         accelerationInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
         accelerationInfo.pNext = nullptr;
-        accelerationInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+        accelerationInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR;
         accelerationInfo.compactedSize = 0;
         accelerationInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
         accelerationInfo.maxGeometryCount = 1;
@@ -821,7 +827,7 @@ int main() {
         accelerationBuildGeometryInfo.pNext = nullptr;
         accelerationBuildGeometryInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
         accelerationBuildGeometryInfo.flags =
-            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR;
         accelerationBuildGeometryInfo.update = VK_FALSE;
         accelerationBuildGeometryInfo.srcAccelerationStructure = VK_NULL_HANDLE;
         accelerationBuildGeometryInfo.dstAccelerationStructure = topLevelAS;
@@ -857,6 +863,12 @@ int main() {
         commandBufferBeginInfo.pInheritanceInfo = nullptr;
         vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
 
+        vkCmdBuildAccelerationStructureKHR(commandBuffer, 1, &accelerationBuildGeometryInfo,
+                                           accelerationBuildOffsets.data());
+
+        // Update Top-Level Acceleration Structure:
+        accelerationBuildGeometryInfo.srcAccelerationStructure = accelerationBuildGeometryInfo.dstAccelerationStructure;
+        accelerationBuildGeometryInfo.update = VK_TRUE;
         vkCmdBuildAccelerationStructureKHR(commandBuffer, 1, &accelerationBuildGeometryInfo,
                                            accelerationBuildOffsets.data());
 
@@ -1406,6 +1418,7 @@ int main() {
             }
         }
         if (!quitMessageReceived) {
+
             uint32_t imageIndex = 0;
             ASSERT_VK_RESULT(vkAcquireNextImageKHR(device, swapchain, UINT64_MAX,
                                                    semaphoreImageAvailable, nullptr, &imageIndex));
